@@ -73,9 +73,6 @@ template<class Archive> void PrefDB::serialize(Archive & ar, const unsigned int 
 		bool help;
 		ar & boost::serialization::make_nvp("help", help);
 	}
-	ar & boost::serialization::make_nvp("trace", trace.unsafe_ref());
-	if (trace.get() == TraceShape)
-		trace.unsafe_ref() = TraceDefault;
 	if (version < 3) {
 		int delay;
 		ar & boost::serialization::make_nvp("delay", delay);
