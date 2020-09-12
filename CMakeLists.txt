@@ -11,6 +11,7 @@ pkg_check_modules(MODULES REQUIRED
     x11 xi xext xfixes xtst
     gtkmm-3.0
     dbus-glib-1
+    jsoncpp
 )
 
 find_package(Boost REQUIRED COMPONENTS serialization)

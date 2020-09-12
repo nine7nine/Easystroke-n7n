@@ -137,14 +137,66 @@ template<class Archive> void PrefDB::serialize(Archive & ar, const unsigned int 
 	ar & whitelist.unsafe_ref();
 }
 
+void PrefDB::store(Json::Value& root) const {
+    STORE(exceptions);
+    STORE(button);
+    STORE(trace);
+    STORE(advanced_ignore);
+    STORE(proximity);
+    STORE(left_handed);
+    STORE(init_timeout);
+    STORE(final_timeout);
+    STORE(timeout_profile);
+    STORE(timeout_gestures);
+    STORE(tray_icon);
+    STORE(excluded_devices);
+    STORE(color);
+    STORE(trace_width);
+    STORE(extra_buttons);
+    STORE(advanced_popups);
+    STORE(scroll_invert);
+    STORE(scroll_speed);
+    STORE(tray_feedback);
+    STORE(show_osd);
+    STORE(move_back);
+    STORE(device_timeout);
+    STORE(whitelist);
+}
+
+void PrefDB::load(Json::Value& root) {
+    LOAD(exceptions);
+    LOAD(button);
+    LOAD(trace);
+    LOAD(advanced_ignore);
+    LOAD(proximity);
+    LOAD(left_handed);
+    LOAD(init_timeout);
+    LOAD(final_timeout);
+    LOAD(timeout_profile);
+    LOAD(timeout_gestures);
+    LOAD(tray_icon);
+    LOAD(excluded_devices);
+    LOAD(color);
+    LOAD(trace_width);
+    LOAD(extra_buttons);
+    LOAD(advanced_popups);
+    LOAD(scroll_invert);
+    LOAD(scroll_speed);
+    LOAD(tray_feedback);
+    LOAD(show_osd);
+    LOAD(move_back);
+    LOAD(device_timeout);
+    LOAD(whitelist);
+}
+
 void PrefDB::timeout() {
 	std::string filename = config_dir+"preferences"+prefs_versions[0];
 	std::string tmp = filename + ".tmp";
 	try {
 		std::ofstream ofs(tmp.c_str());
-		boost::archive::text_oarchive oa(ofs);
-		const PrefDB *me = this;
-		oa << *me;
+		Json::Value root;
+		store(root);
+		ofs << root;
 		ofs.close();
 		if (rename(tmp.c_str(), filename.c_str()))
 			throw std::runtime_error("rename() failed");
@@ -178,6 +230,12 @@ void PrefDB::init() {
 			filename += *v;
 			try {
 				std::ifstream ifs(filename.c_str(), std::ios::binary);
+				if(boost::algorithm::ends_with(filename, ".json")) {
+					Json::Value root;
+					ifs >> root;
+					load(root);
+				}
+				else
 				if (!ifs.fail()) {
 					boost::archive::text_iarchive ia(ifs);
 					ia >> *this;

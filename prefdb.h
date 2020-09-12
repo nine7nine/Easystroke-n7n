@@ -25,6 +25,8 @@
 
 #include "var.h"
 
+#include "json.h"
+
 enum TraceType { TraceDefault, TraceShape, TraceNone, TraceAnnotate, TraceFire, TraceWater };
 enum TimeoutType { TimeoutOff, TimeoutDefault, TimeoutMedium, TimeoutAggressive, TimeoutFlick, TimeoutCustom, TimeoutConservative };
 
@@ -59,6 +61,21 @@ public:
 	bool overlap(const ButtonInfo &bi) const;
 	ButtonInfo(guint button_) : button(button_), state(0), instant(false), click_hold(false) {}
 	ButtonInfo() : button(0), state(0), instant(false), click_hold(false) {}
+
+public:
+    void store(Json::Value& root) const {
+        STORE(button);
+        STORE(state);
+        STORE(instant);
+        STORE(click_hold);
+    }
+    void load(Json::Value& root) {
+        LOAD(button);
+        LOAD(state);
+        LOAD(instant);
+        LOAD(click_hold);
+    }
+
 };
 BOOST_CLASS_VERSION(ButtonInfo, 4)
 
@@ -93,6 +110,21 @@ struct RGBA {
 		return color == rgba.color && alpha == rgba.alpha;
 	}
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+public:
+    void store(Json::Value& root) const {
+        root["r"] = color.get_red();
+        root["g"] = color.get_green();
+        root["b"] = color.get_blue();
+        STORE(alpha);
+    }
+    void load(Json::Value& root) {
+        color.set_red(root["r"].asUInt());
+        color.set_green(root["g"].asUInt());
+        color.set_blue(root["b"].asUInt());
+        LOAD(alpha);
+    }
+
 };
 
 extern const ButtonInfo default_button;
@@ -136,6 +168,11 @@ public:
 
 	void init();
 	virtual void timeout();
+
+public:
+    void store(Json::Value& root) const;
+    void load(Json::Value& root);
+
 };
 
 BOOST_CLASS_VERSION(PrefDB, 18)
@@ -144,4 +181,41 @@ extern PrefDB prefs;
 
 template <class T> PrefDB::PrefSource<T>::PrefSource() : Source<T>() { prefs.watch(*this); }
 template <class T> PrefDB::PrefSource<T>::PrefSource(T x_) : Source<T>(x_) { prefs.watch(*this); }
+
+inline
+void store(Json::Value& jsonValue, const TraceType& value) {
+    jsonValue = value;
+}
+inline
+void load(Json::Value& jsonValue, TraceType& value) {
+    value = (TraceType)jsonValue.asInt();
+}
+
+inline
+void store(Json::Value& jsonValue, const TimeoutType& value) {
+    jsonValue = value;
+}
+inline
+void load(Json::Value& jsonValue, TimeoutType& value) {
+    value = (TimeoutType)jsonValue.asInt();
+}
+
+inline
+void store(Json::Value& jsonValue, const ButtonInfo& value) {
+    value.store(jsonValue);
+}
+inline
+void load(Json::Value& jsonValue, ButtonInfo& value) {
+    value.load(jsonValue);
+}
+
+inline
+void store(Json::Value& jsonValue, const RGBA& value) {
+    value.store(jsonValue);
+}
+inline
+void load(Json::Value& jsonValue, RGBA& value) {
+    value.load(jsonValue);
+}
+
 #endif
