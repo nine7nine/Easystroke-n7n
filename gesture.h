@@ -23,6 +23,7 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/nvp.hpp>
 
 #include <X11/X.h>
 
@@ -65,10 +66,11 @@ public:
 			return product;
 		}
 		template<class Archive> void serialize(Archive & ar, const unsigned int version) {
-			ar & x; ar & y;
+			ar & boost::serialization::make_nvp("x", x);
+			ar & boost::serialization::make_nvp("y", y);
 			if (version == 0) {
 				double time;
-				ar & time;
+				ar & boost::serialization::make_nvp("time", time);
 			}
 		}
 	};

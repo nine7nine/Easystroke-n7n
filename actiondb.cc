@@ -23,6 +23,8 @@
 #include <string>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/list.hpp>
@@ -47,73 +49,73 @@ template<class Archive> void Unique::serialize(Archive & ar, const unsigned int 
 template<class Archive> void Action::serialize(Archive & ar, const unsigned int version) {}
 
 template<class Archive> void Command::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<Action>(*this);
-	ar & cmd;
+	ar & boost::serialization::make_nvp("Action", boost::serialization::base_object<Action>(*this));
+	ar & boost::serialization::make_nvp("cmd", cmd);
 }
 
 template<class Archive> void ModAction::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<Action>(*this);
-	ar & mods;
+	ar & boost::serialization::make_nvp("Action", boost::serialization::base_object<Action>(*this));
+	ar & boost::serialization::make_nvp("mods", mods);
 }
 
 template<class Archive> void SendKey::load(Archive & ar, const unsigned int version) {
 	guint code;
-	ar & boost::serialization::base_object<ModAction>(*this);
-	ar & key;
-	ar & code;
+	ar & boost::serialization::make_nvp("ModAction", boost::serialization::base_object<ModAction>(*this));
+	ar & boost::serialization::make_nvp("key", key);
+	ar & boost::serialization::make_nvp("code", code);
 	if (version < 1) {
 		bool xtest;
-		ar & xtest;
+		ar & boost::serialization::make_nvp("xtest", xtest);
 	}
 }
 
 template<class Archive> void SendKey::save(Archive & ar, const unsigned int version) const {
 	guint code = 0;
-	ar & boost::serialization::base_object<ModAction>(*this);
-	ar & key;
-	ar & code;
+	ar & boost::serialization::make_nvp("ModAction", boost::serialization::base_object<ModAction>(*this));
+	ar & boost::serialization::make_nvp("key", key);
+	ar & boost::serialization::make_nvp("code", code);
 }
 
 template<class Archive> void SendText::load(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<Action>(*this);
+	ar & boost::serialization::make_nvp("Action", boost::serialization::base_object<Action>(*this));
 	std::string str;
-	ar & str;
+	ar & boost::serialization::make_nvp("text", str);
 	text = str;
 }
 
 template<class Archive> void SendText::save(Archive & ar, const unsigned int version) const {
-	ar & boost::serialization::base_object<Action>(*this);
+	ar & boost::serialization::make_nvp("Action", boost::serialization::base_object<Action>(*this));
 	std::string str(text);
-	ar & str;
+	ar & boost::serialization::make_nvp("text", str);
 }
 
 template<class Archive> void Scroll::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<ModAction>(*this);
+	ar & boost::serialization::make_nvp("ModAction", boost::serialization::base_object<ModAction>(*this));
 }
 
 template<class Archive> void Ignore::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<ModAction>(*this);
+	ar & boost::serialization::make_nvp("ModAction", boost::serialization::base_object<ModAction>(*this));
 }
 
 template<class Archive> void Button::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<ModAction>(*this);
-	ar & button;
+	ar & boost::serialization::make_nvp("ModAction", boost::serialization::base_object<ModAction>(*this));
+	ar & boost::serialization::make_nvp("button", button);
 }
 
 template<class Archive> void Misc::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<Action>(*this);
-	ar & type;
+	ar & boost::serialization::make_nvp("Action", boost::serialization::base_object<Action>(*this));
+	ar & boost::serialization::make_nvp("type", type);
 }
 
 template<class Archive> void StrokeSet::serialize(Archive & ar, const unsigned int version) {
-	ar & boost::serialization::base_object<std::set<RStroke> >(*this);
+	ar & boost::serialization::make_nvp("this", boost::serialization::base_object<std::set<RStroke> >(*this));
 }
 
 template<class Archive> void StrokeInfo::serialize(Archive & ar, const unsigned int version) {
-	ar & strokes;
-	ar & action;
+	ar & boost::serialization::make_nvp("strokes", strokes);
+	ar & boost::serialization::make_nvp("action", action);
 	if (version == 0) return;
-	ar & name;
+	ar & boost::serialization::make_nvp("name", name);
 }
 
 using namespace std;
@@ -146,14 +148,14 @@ const Glib::ustring Misc::get_label() const { return _(types[type]); }
 const char *Misc::types[5] = { N_("None"), N_("Unminimize"), N_("Show/Hide"), N_("Disable (Enable)"), nullptr };
 
 template<class Archive> void ActionListDiff::serialize(Archive & ar, const unsigned int version) {
-	ar & deleted;
-	ar & added;
-	ar & name;
-	ar & children;
-	ar & app;
+	ar & boost::serialization::make_nvp("deleted", deleted);
+	ar & boost::serialization::make_nvp("added", added);
+	ar & boost::serialization::make_nvp("name", name);
+	ar & boost::serialization::make_nvp("children", children);
+	ar & boost::serialization::make_nvp("app", app);
 	if (version == 0)
 		return;
-	ar & order;
+	ar & boost::serialization::make_nvp("order", order);
 }
 
 ActionDB::ActionDB() {
@@ -162,17 +164,17 @@ ActionDB::ActionDB() {
 
 template<class Archive> void ActionDB::load(Archive & ar, const unsigned int version) {
 	if (version >= 2) {
-		ar & root;
+		ar & boost::serialization::make_nvp("ActionListDiff", root);
 	}
 	if (version == 1) {
 		std::map<int, StrokeInfo> strokes;
-		ar & strokes;
+		ar & boost::serialization::make_nvp("strokes", strokes);
 		for (std::map<int, StrokeInfo>::iterator i = strokes.begin(); i != strokes.end(); ++i)
 			root.add(i->second);
 	}
 	if (version == 0) {
 		std::map<std::string, StrokeInfo> strokes;
-		ar & strokes;
+		ar & boost::serialization::make_nvp("strokes", strokes);
 		for (std::map<std::string, StrokeInfo>::iterator i = strokes.begin(); i != strokes.end(); ++i) {
 			i->second.name = i->first;
 			root.add(i->second);
@@ -185,7 +187,7 @@ template<class Archive> void ActionDB::load(Archive & ar, const unsigned int ver
 }
 
 template<class Archive> void ActionDB::save(Archive & ar, const unsigned int version) const {
-	ar & root;
+	ar & boost::serialization::make_nvp("ActionListDiff", root);;
 }
 
 Source<bool> action_dummy;
@@ -202,8 +204,8 @@ void ActionDBWatcher::init() {
 			try {
 				ifstream ifs(filename.c_str(), ios::binary);
 				if (!ifs.fail()) {
-					boost::archive::text_iarchive ia(ifs);
-					ia >> actions;
+					boost::archive::xml_iarchive ia(ifs);
+					ia >> boost::serialization::make_nvp("actions", actions);
 					if (verbosity >= 2)
 						printf("Loaded actions.\n");
 				}
@@ -220,8 +222,8 @@ void ActionDBWatcher::timeout() {
 	std::string tmp = filename + ".tmp";
 	try {
 		ofstream ofs(tmp.c_str());
-		boost::archive::text_oarchive oa(ofs);
-		oa << (const ActionDB &)actions;
+		boost::archive::xml_oarchive oa(ofs);
+		oa << boost::serialization::make_nvp("actions", (const ActionDB &)actions);
 		ofs.close();
 		if (rename(tmp.c_str(), filename.c_str()))
 			throw std::runtime_error(_("rename() failed"));

@@ -21,6 +21,7 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/nvp.hpp>
 #include <gdkmm/color.h>
 
 #include "var.h"
@@ -31,19 +32,19 @@ enum TimeoutType { TimeoutOff, TimeoutDefault, TimeoutMedium, TimeoutAggressive,
 class ButtonInfo {
 	friend class boost::serialization::access;
 	template<class Archive> void serialize(Archive & ar, const unsigned int version) {
-		ar & button;
-		ar & state;
+		ar & boost::serialization::make_nvp("button", button);
+		ar & boost::serialization::make_nvp("state", state);
 		if (version == 1) {
 			int special;
-			ar & special;
+			ar & boost::serialization::make_nvp("special", special);
 			return;
 		}
 		if (version < 3)
 			return;
-		ar & instant;
+		ar & boost::serialization::make_nvp("instant", instant);
 		if (version < 4)
 			return;
-		ar & click_hold;
+		ar & boost::serialization::make_nvp("click_hold", click_hold);
 	}
 public:
 	guint button;
@@ -74,17 +75,17 @@ struct RGBA {
 		r = color.get_red();
 		g = color.get_green();
 		b = color.get_blue();
-		ar & r;
-		ar & g;
-		ar & b;
-		ar & alpha;
+		ar & boost::serialization::make_nvp("r", r);
+		ar & boost::serialization::make_nvp("g", g);
+		ar & boost::serialization::make_nvp("b", b);
+		ar & boost::serialization::make_nvp("alpha", alpha);
 	}
 	template<class Archive> void load(Archive &ar, unsigned int version) {
 		gushort r, g, b;
-		ar & r;
-		ar & g;
-		ar & b;
-		ar & alpha;
+		ar & boost::serialization::make_nvp("r", r);
+		ar & boost::serialization::make_nvp("g", g);
+		ar & boost::serialization::make_nvp("b", b);
+		ar & boost::serialization::make_nvp("alpha", alpha);
 		color.set_red(r);
 		color.set_green(g);
 		color.set_blue(b);

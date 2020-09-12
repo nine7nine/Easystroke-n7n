@@ -39,16 +39,16 @@ template<class Archive> void Stroke::save(Archive & ar, const unsigned int versi
 	std::vector<Point> ps;
 	for (unsigned int i = 0; i < size(); i++)
 		ps.push_back(points(i));
-	ar & ps;
-	ar & button;
-	ar & trigger;
-	ar & timeout;
-	ar & modifiers;
+	ar & boost::serialization::make_nvp("points", ps);
+	ar & boost::serialization::make_nvp("button", button);
+	ar & boost::serialization::make_nvp("trigger", trigger);
+	ar & boost::serialization::make_nvp("timeout", timeout);
+	ar & boost::serialization::make_nvp("modifiers", modifiers);
 }
 
 template<class Archive> void Stroke::load(Archive & ar, const unsigned int version) {
 	std::vector<Point> ps;
-	ar & ps;
+	ar & boost::serialization::make_nvp("points", ps);
 	if (ps.size()) {
 		stroke_t *s = stroke_alloc(ps.size());
 		for (std::vector<Point>::iterator i = ps.begin(); i != ps.end(); ++i)
@@ -57,17 +57,17 @@ template<class Archive> void Stroke::load(Archive & ar, const unsigned int versi
 		stroke.reset(s, &stroke_free);
 	}
 	if (version == 0) return;
-	ar & button;
+	ar & boost::serialization::make_nvp("button", button);
 	if (version >= 2)
-		ar & trigger;
+		ar & boost::serialization::make_nvp("trigger", trigger);
 	if (version < 4 && (!button || trigger == (int)prefs.button.get().button))
 		trigger = 0;
 	if (version < 3)
 		return;
-	ar & timeout;
+	ar & boost::serialization::make_nvp("timeout", timeout);
 	if (version < 5)
 		return;
-	ar & modifiers;
+	ar & boost::serialization::make_nvp("modifiers", modifiers);
 }
 
 Stroke::Stroke(PreStroke &ps, int trigger_, int button_, unsigned int modifiers_, bool timeout_) : trigger(trigger_), button(button_), modifiers(modifiers_), timeout(timeout_) {
