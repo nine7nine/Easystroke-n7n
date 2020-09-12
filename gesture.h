@@ -123,4 +123,42 @@ public:
 	void add(RTriple p) { push_back(p); }
 	bool valid() const { return size() > 2; }
 };
+
+#include "prefdb.h"
+
+template<class Archive> void Stroke::save(Archive & ar, const unsigned int version) const {
+    std::vector<Point> ps;
+    for (unsigned int i = 0; i < size(); i++)
+        ps.push_back(points(i));
+    ar & boost::serialization::make_nvp("points", ps);
+    ar & boost::serialization::make_nvp("button", button);
+    ar & boost::serialization::make_nvp("trigger", trigger);
+    ar & boost::serialization::make_nvp("timeout", timeout);
+    ar & boost::serialization::make_nvp("modifiers", modifiers);
+}
+
+template<class Archive> void Stroke::load(Archive & ar, const unsigned int version) {
+    std::vector<Point> ps;
+    ar & boost::serialization::make_nvp("points", ps);
+    if (ps.size()) {
+        stroke_t *s = stroke_alloc(ps.size());
+        for (std::vector<Point>::iterator i = ps.begin(); i != ps.end(); ++i)
+            stroke_add_point(s, i->x, i->y);
+        stroke_finish(s);
+        stroke.reset(s, &stroke_free);
+    }
+    if (version == 0) return;
+    ar & boost::serialization::make_nvp("button", button);
+    if (version >= 2)
+        ar & boost::serialization::make_nvp("trigger", trigger);
+    if (version < 4 && (!button || trigger == (int)prefs.button.get().button))
+        trigger = 0;
+    if (version < 3)
+        return;
+    ar & boost::serialization::make_nvp("timeout", timeout);
+    if (version < 5)
+        return;
+    ar & boost::serialization::make_nvp("modifiers", modifiers);
+}
+
 #endif
