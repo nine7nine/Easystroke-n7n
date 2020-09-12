@@ -144,9 +144,10 @@ void PrefDB::timeout() {
 	std::string tmp = filename + ".tmp";
 	try {
 		std::ofstream ofs(tmp.c_str());
-		boost::archive::xml_oarchive oa(ofs);
-		const PrefDB *me = this;
-		oa << boost::serialization::make_nvp("PrefDB", *me);
+		{
+			boost::archive::xml_oarchive oa(ofs);
+			oa << boost::serialization::make_nvp("PrefDB", *this);
+		}
 		ofs.close();
 		if (rename(tmp.c_str(), filename.c_str()))
 			throw std::runtime_error("rename() failed");

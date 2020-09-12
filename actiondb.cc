@@ -222,8 +222,10 @@ void ActionDBWatcher::timeout() {
 	std::string tmp = filename + ".tmp";
 	try {
 		ofstream ofs(tmp.c_str());
-		boost::archive::xml_oarchive oa(ofs);
-		oa << boost::serialization::make_nvp("actions", (const ActionDB &)actions);
+		{
+			boost::archive::xml_oarchive oa(ofs);
+			oa << boost::serialization::make_nvp("actions", actions);
+		}
 		ofs.close();
 		if (rename(tmp.c_str(), filename.c_str()))
 			throw std::runtime_error(_("rename() failed"));
