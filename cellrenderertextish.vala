@@ -22,7 +22,7 @@ public class CellRendererTextish : Gtk.CellRendererText {
 		this.items = items;
 	}
 
-	public override unowned Gtk.CellEditable start_editing (Gdk.Event? event, Gtk.Widget widget, string path, Gdk.Rectangle background_area, Gdk.Rectangle cell_area, Gtk.CellRendererState flags) {
+	public override unowned Gtk.CellEditable? start_editing (Gdk.Event? event, Gtk.Widget widget, string path, Gdk.Rectangle background_area, Gdk.Rectangle cell_area, Gtk.CellRendererState flags) {
 		cell = null;
 		if (!editable)
 			return cell;

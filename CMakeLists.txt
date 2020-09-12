@@ -18,6 +18,7 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 add_executable(easystroke
     ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/gui.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cellrenderertextish.c
 )
 
 target_link_libraries(easystroke
@@ -35,6 +36,7 @@ target_compile_options(easystroke
     PRIVATE
     -DLOCALEDIR="${CMAKE_INSTALL_PREFIX}/share/locale/"
     -DGETTEXT_PACKAGE="easystroke"
+    -I${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_command(OUTPUT gui.c
@@ -46,4 +48,9 @@ add_custom_command(OUTPUT gui.c
         >> gui.c
     COMMAND echo '\"\;' >> gui.c
     DEPENDS gui.glade
+)
+
+add_custom_command(OUTPUT cellrenderertextish.c
+    COMMAND valac -c ${CMAKE_CURRENT_SOURCE_DIR}/cellrenderertextish.vala --pkg gtk+-3.0 -C -H cellrenderertextish.h
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellrenderertextish.vala
 )
