@@ -196,6 +196,8 @@ void update_actions() {
 	action_dummy.set(false);
 }
 
+#include <boost/algorithm/string/predicate.hpp>
+
 void ActionDBWatcher::init() {
 	std::string filename = config_dir+"actions";
 	for (const char **v = actions_versions; *v; v++)
@@ -204,8 +206,14 @@ void ActionDBWatcher::init() {
 			try {
 				ifstream ifs(filename.c_str(), ios::binary);
 				if (!ifs.fail()) {
-					boost::archive::xml_iarchive ia(ifs);
-					ia >> boost::serialization::make_nvp("actions", actions);
+					if(boost::algorithm::ends_with(filename, ".xml")) {
+						boost::archive::xml_iarchive ia(ifs);
+						ia >> boost::serialization::make_nvp("actions", actions);
+					}
+					else {
+						boost::archive::text_iarchive ia(ifs);
+						ia >> boost::serialization::make_nvp("actions", actions);
+					}
 					if (verbosity >= 2)
 						printf("Loaded actions.\n");
 				}

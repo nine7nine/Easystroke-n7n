@@ -174,6 +174,8 @@ bool ButtonInfo::overlap(const ButtonInfo &bi) const {
 	return !((state ^ bi.state) & ~LockMask & ~Mod2Mask);
 }
 
+#include <boost/algorithm/string/predicate.hpp>
+
 void PrefDB::init() {
 	std::string filename = config_dir+"preferences";
 	for (const char **v = prefs_versions; *v; v++) {
@@ -182,8 +184,14 @@ void PrefDB::init() {
 			try {
 				std::ifstream ifs(filename.c_str(), std::ios::binary);
 				if (!ifs.fail()) {
-					boost::archive::xml_iarchive ia(ifs);
-					ia >> boost::serialization::make_nvp("PrefDB", *this);
+					if(boost::algorithm::ends_with(filename, ".xml")) {
+						boost::archive::xml_iarchive ia(ifs);
+						ia >> boost::serialization::make_nvp("PrefDB", *this);
+					}
+					else {
+						boost::archive::text_iarchive ia(ifs);
+						ia >> boost::serialization::make_nvp("PrefDB", *this);
+					}
 					if (verbosity >= 2)
 						std::cout << "Loaded preferences." << std::endl;
 				}
