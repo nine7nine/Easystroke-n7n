@@ -17,6 +17,7 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 
 add_executable(easystroke
     ${SOURCES}
+    ${CMAKE_CURRENT_BINARY_DIR}/gui.c
 )
 
 target_link_libraries(easystroke
@@ -34,4 +35,15 @@ target_compile_options(easystroke
     PRIVATE
     -DLOCALEDIR="${CMAKE_INSTALL_PREFIX}/share/locale/"
     -DGETTEXT_PACKAGE="easystroke"
+)
+
+add_custom_command(OUTPUT gui.c
+    COMMAND echo 'const char *gui_buffer = \"\\' > gui.c
+    COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/gui.glade
+        | sed -s 's/\"GtkWindow\"/\"GtkApplicationWindow\"/'
+        | sed -s 's/\"/\\\\\"/g'
+        | sed -s 's/$$/\\\\n\\\\/g'
+        >> gui.c
+    COMMAND echo '\"\;' >> gui.c
+    DEPENDS gui.glade
 )
