@@ -1,3 +1,7 @@
+#
+
+/cmake-build*/
+
 *.o
 *.Po
 easystroke

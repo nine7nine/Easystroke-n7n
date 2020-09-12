@@ -185,48 +185,6 @@ const Combo<TimeoutType>::Info timeout_info_exp[] = {
 	{ TimeoutDefault, 0 }
 };
 
-Source<bool> autostart_ok(true);
-
-class Autostart : public IO<bool>, private Base {
-	bool a;
-	std::string filename;
-public:
-	Autostart() {
-		std::string dir = getenv("HOME");
-		dir += "/.config/autostart";
-		filename = dir + "/easystroke.desktop";
-
-		if (!is_dir(dir) && mkdir(dir.c_str(), 0777)) {
-			autostart_ok.set(false);
-			return;
-		}
-		a = is_file(filename);
-	}
-	virtual void set(const bool a_) {
-		a = a_;
-		notify();
-	}
-	virtual bool get() const { return a; }
-	virtual void notify() {
-		if (a) {
-			char path[256] = "easystroke";
-			readlink("/proc/self/exe", path, sizeof(path));
-
-			FILE *file = fopen(filename.c_str(), "w");
-			if (!file || fprintf(file, desktop_file, path) == -1)
-				autostart_ok.set(false);
-			if (file)
-				fclose(file);
-		} else {
-			if (remove(filename.c_str()) == -1)
-				autostart_ok.set(false);
-		}
-		update();
-	}
-};
-
-Autostart autostart;
-
 void remove_last_entry(const Glib::ustring & name) {
 	Gtk::ComboBox *combo;
 	widgets->get_widget(name, combo);
@@ -253,9 +211,6 @@ Prefs::Prefs() {
 	new Check(prefs.tray_icon, "check_tray_icon");
 	new Sensitive(prefs.tray_icon, "check_tray_feedback");
 	new Check(prefs.tray_feedback, "check_tray_feedback");
-
-	new Check(autostart, "check_autostart");
-	new Sensitive(autostart_ok, "check_autostart");
 
 	new Adjustment<int>(prefs.init_timeout, "adjustment_init_timeout");
 	new Adjustment<int>(prefs.final_timeout, "adjustment_final_timeout");
