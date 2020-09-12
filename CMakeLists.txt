@@ -54,3 +54,8 @@ add_custom_command(OUTPUT cellrenderertextish.c
     COMMAND valac -c ${CMAKE_CURRENT_SOURCE_DIR}/cellrenderertextish.vala --pkg gtk+-3.0 -C -H cellrenderertextish.h
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cellrenderertextish.vala
 )
+
+install(
+    TARGETS easystroke
+    DESTINATION bin/
+)
