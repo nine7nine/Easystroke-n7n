@@ -456,10 +456,23 @@ void App::version() {
 	exit(EXIT_SUCCESS);
 }
 
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+
 void App::create_config_dir() {
 	if (config_dir == "") {
 		config_dir = getenv("HOME");
 		config_dir += "/.easystroke";
+		if(getenv("HOME") != nullptr) {
+			boost::filesystem::path dir = getenv("HOME");
+			dir += "/.config/easystroke";
+			if(boost::filesystem::is_directory(dir)) config_dir = dir.string();
+		}
+		if(getenv("XDG_CONFIG_HOME") != nullptr) {
+			boost::filesystem::path dir = getenv("XDG_CONFIG_HOME");
+			dir += "easystroke";
+			if(boost::filesystem::is_directory(dir)) config_dir = dir.string();
+		}
 	}
 	struct stat st;
 	char *name = realpath(config_dir.c_str(), nullptr);

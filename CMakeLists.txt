@@ -13,7 +13,7 @@ pkg_check_modules(MODULES REQUIRED
     dbus-glib-1
 )
 
-find_package(Boost REQUIRED COMPONENTS serialization)
+find_package(Boost REQUIRED COMPONENTS serialization filesystem)
 
 add_executable(easystroke
     ${SOURCES}
