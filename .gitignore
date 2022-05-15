@@ -14,5 +14,4 @@ po/??
 po/??_??
 po/POTFILES.in
 po/*.pot
-easystroke.desktop
 .clang_complete
