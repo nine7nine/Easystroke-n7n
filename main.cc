@@ -22,7 +22,9 @@
 #include "composite.h"
 #include "grabber.h"
 #include "handler.h"
+#include "log.h"
 
+#include <glib.h>
 #include <glibmm/i18n.h>
 
 #include <X11/Xutil.h>
@@ -37,7 +39,7 @@
 extern Source<bool> disabled;
 
 bool experimental = false;
-int verbosity = 0;
+
 const char *prefs_versions[] = { ".xml", "-0.5.5", "-0.4.1", "-0.4.0", "", nullptr };
 const char *actions_versions[] = { ".xml", "-0.5.6", "-0.4.1", "-0.4.0", "", nullptr };
 Source<Window> current_app_window(None);
@@ -165,8 +167,7 @@ private:
 
 class ReloadTrace : public Timeout {
 	void timeout() {
-		if (verbosity >= 2)
-			printf("Reloading gesture display\n");
+		g_debug("Reloading gesture display\n");
 		xstate->queue(sigc::mem_fun(*this, &ReloadTrace::reload));
 	}
 	void reload() { trace.reset(init_trace()); }
@@ -177,78 +178,9 @@ static void schedule_reload_trace() { reload_trace.set_timeout(1000); }
 extern const char *gui_buffer;
 
 bool App::local_command_line_vfunc (char**& arg, int& exit_status) {
-	int i = 1;
-	while (arg[i] && arg[i][0] == '-') {
-		if (arg[i][1] == '-') {
-			if (!strcmp(arg[i], "--experimental")) {
-				experimental = true;
-			} else if (!strcmp(arg[i], "--verbose")) {
-				verbosity++;
-			} else if (!strcmp(arg[i], "--help")) {
-				usage(arg[0]);
-				exit_status = EXIT_SUCCESS;
-				return true;
-			} else if (!strcmp(arg[i], "--version")) {
-				version();
-				exit_status = EXIT_SUCCESS;
-				return true;
-			} else if (!strcmp(arg[i], "--config-dir")) {
-				if (!arg[++i]) {
-					printf("Error: Option --config-dir requires an argument.\n");
-					exit_status = EXIT_FAILURE;
-					return true;
-				}
-				config_dir = arg[i];
-			} else {
-				printf("Error: Unknown option %s\n", arg[i]);
-				exit_status = EXIT_FAILURE;
-				return true;
-			}
-		} else {
-			for (int j = 1; arg[i][j]; j++)
-				switch (arg[i][j]) {
-					case 'c':
-						if (arg[i][j+1] || !arg[i+1]) {
-							printf("Error: Option -c requires an argument.\n");
-							exit_status = EXIT_FAILURE;
-							return true;
-						}
-						config_dir = arg[++i];
-						break;
-					case 'e':
-						experimental = true;
-						break;
-					case 'v':
-						verbosity++;
-						break;
-					case 'h':
-						usage(arg[0]);
-						exit_status = EXIT_SUCCESS;
-						return true;
-					default:
-						printf("Error: Unknown option -%c\n", arg[i][j]);
-						exit_status = EXIT_FAILURE;
-						return true;
-				}
-		}
-		i++;
-	}
-
-	if (i > 1) {
-		for (int j = 1; j < i; j++) {
-			g_free(arg[j]);
-			arg[j] = 0;
-		}
-		for (int j = 0; arg[j+i]; j++) {
-			arg[j+1] = arg[j+i];
-			arg[j+i] = 0;
-		}
-	}
 
 	if (!register_application()) {
-		printf("Failed to register the application\n");
-		exit_status = EXIT_FAILURE;
-		return true;
+		g_error("Failed to register the application\n");
 	}
 	activate();
 	return false;
@@ -262,10 +194,7 @@ void App::run_by_name(const char *str, const Glib::RefPtr<Gio::ApplicationComman
 			return;
 		}
 	}
-	char *msg;
-	asprintf(&msg, _("Warning: No action \"%s\" defined\n"), str);
-	cmd_line->print(msg);
-	free(msg);
+	g_warning("No action \"%s\" defined\n", str);
 }
 
 int App::on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &command_line) {
@@ -274,7 +203,7 @@ int App::on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &comman
 	for (int i = 1; arg[i]; i++)
 		if (!strcmp(arg[i], "send")) {
 			if (!arg[++i])
-				printf("Warning: Send requires an argument\n");
+				g_warning("Send requires an argument\n");
 			else
 				run_by_name(arg[i], command_line);
 		} else if (!strcmp(arg[i], "show")) {
@@ -290,10 +219,7 @@ int App::on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &comman
 		} else if (!strcmp(arg[i], "quit")) {
 			quit();
 		} else {
-			char *msg;
-			asprintf(&msg, "Warning: Unknown command \"%s\".\n", arg[i]);
-			command_line->print(msg);
-			free(msg);
+			g_warning("Warning: Unknown command \"%s\".\n", arg[i]);
 		}
 	if (!arg[1] && remote)
 		win->show_hide();
@@ -347,8 +273,7 @@ void App::on_activate() {
 
 	dpy = XOpenDisplay(nullptr);
 	if (!dpy) {
-		printf(_("Couldn't open display.\n"));
-		exit(EXIT_FAILURE);
+		 g_error("Couldn't open display.\n");
 	}
 
 	ROOT = DefaultRootWindow(dpy);
@@ -378,8 +303,7 @@ void App::on_activate() {
 	try {
 		widgets = Gtk::Builder::create_from_string(gui_buffer);
 	} catch (Gtk::BuilderError &e) {
-		printf("Error building GUI: %s\n", e.what().c_str());
-		exit(EXIT_FAILURE);
+		g_warning("Error building GUI: %s\n", e.what().c_str());
 	}
 	win = new Win;
 	add_window(win->get_window());
@@ -444,13 +368,11 @@ void App::create_config_dir() {
 	// check if the directory does not exist
 	if (lstat(name, &st) == -1) {
 		if (mkdir(config_dir.c_str(), 0777) == -1) {
-			printf(_("Error: Couldn't create configuration directory \"%s\"\n"), config_dir.c_str());
-			exit(EXIT_FAILURE);
+			g_error("Error: Couldn't create configuration directory \"%s\"\n", config_dir.c_str());
 		}
 	} else {
 		if (!S_ISDIR(st.st_mode)) {
-			printf(_("Error: \"%s\" is not a directory\n"), config_dir.c_str());
-			exit(EXIT_FAILURE);
+			g_error("Error: \"%s\" is not a directory\n", config_dir.c_str());
 		}
 
 
@@ -510,11 +432,10 @@ void fake_unicode(gunichar c) {
 	static const KeySym numcode[10] = { XK_0, XK_1, XK_2, XK_3, XK_4, XK_5, XK_6, XK_7, XK_8, XK_9 };
 	static const KeySym hexcode[6] = { XK_a, XK_b, XK_c, XK_d, XK_e, XK_f };
 
-	if (verbosity >= 3) {
-		char buf[7];
-		buf[g_unichar_to_utf8(c, buf)] = '\0';
-		printf("using unicode input for character %s\n", buf);
-	}
+	
+	//buf[g_unichar_to_utf8(c, buf)] = '\0';
+	//g_warning("using unicode input for character %s\n", buf);
+
 	XTestFakeKeyEvent(dpy, XKeysymToKeycode(dpy, XK_Control_L), true, 0);
 	XTestFakeKeyEvent(dpy, XKeysymToKeycode(dpy, XK_Shift_L), true, 0);
 	XTestFakeKeyEvent(dpy, XKeysymToKeycode(dpy, XK_u), true, 0);

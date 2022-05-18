@@ -14,6 +14,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "handler.h"
+#include "log.h"
 #include "main.h"
 #include "trace.h"
 #include "win.h" // Why?
@@ -55,9 +56,10 @@ void XState::handle_enter_leave(XEvent &ev) {
 	Window w = ev.xcrossing.window;
 	if (ev.type == EnterNotify) {
 		current_app_window.set(get_app_window(w));
-		if (verbosity >= 3)
-			printf("Entered window 0x%lx -> 0x%lx\n", w, current_app_window.get());
-	} else printf("Error: Bogus Enter/Leave event\n");
+		g_debug("Entered window 0x%lx -> 0x%lx\n", w, current_app_window.get());
+	} else {
+		g_warning("Error: Bogus Enter/Leave event\n");
+	};
 }
 
 #define H (handler->top())
@@ -75,17 +77,15 @@ void XState::handle_event(XEvent &ev) {
 		return;
 
 	case ButtonPress:
-		if (verbosity >= 3)
-			printf("Press (master): %d (%d, %d) at t = %ld\n", ev.xbutton.button, ev.xbutton.x, ev.xbutton.y, ev.xbutton.time);
-			H->press_master(ev.xbutton.button, ev.xbutton.time);
+		g_debug("Press (master): %d (%d, %d) at t = %ld\n", ev.xbutton.button, ev.xbutton.x, ev.xbutton.y, ev.xbutton.time);
+		H->press_master(ev.xbutton.button, ev.xbutton.time);
 		return;
 
 	case ClientMessage:
 		if (ev.xclient.window != ping_window)
 			return;
 		if (ev.xclient.message_type == *EASYSTROKE_PING) {
-			if (verbosity >= 3)
-				printf("Pong\n");
+			g_debug("Pong\n");
 			H->pong();
 		}
 		return;
@@ -133,8 +133,7 @@ void XState::activate_window(Window w, Time t) {
 	if (XGetWindowAttributes(dpy, w, &attr) && attr.override_redirect)
 		return;
 
-	if (verbosity >= 3)
-		printf("Giving focus to window 0x%lx\n", w);
+	g_debug("Giving focus to window 0x%lx\n", w);
 
 	icccm_client_message(w, *WM_TAKE_FOCUS, t);
 }
@@ -216,11 +215,11 @@ static void print_coordinates(XIValuatorState *valuators, double *values) {
 		if (first)
 			first = false;
 		else
-			printf(", ");
+			g_debug(", ");
 		if (XIMaskIsSet(valuators->mask, i))
-			printf("%.3f", values[elt++]);
+			g_debug("%.3f", values[elt++]);
 		else
-			printf("*");
+			g_debug("*");
 	}
 }
 
@@ -235,30 +234,29 @@ static double get_axis(XIValuatorState &valuators, int axis) {
 }
 
 void XState::report_xi2_event(XIDeviceEvent *event, const char *type) {
-	printf("%s (XI2): ", type);
+	g_debug("%s (XI2): ", type);
 	if (event->detail)
-		printf("%d ", event->detail);
-	printf("(%.3f, %.3f) - (", event->root_x, event->root_y);
+		g_debug("%d ", event->detail);
+	g_debug("(%.3f, %.3f) - (", event->root_x, event->root_y);
 	print_coordinates(&event->valuators, event->valuators.values);
-	printf(") at t = %ld\n", event->time);
+	g_debug(") at t = %ld\n", event->time);
 }
 
 void XState::handle_xi2_event(XIDeviceEvent *event) {
 	switch (event->evtype) {
 		case XI_ButtonPress:
-			if (verbosity >= 3)
+			if (log_utils::isEnabled(G_LOG_LEVEL_DEBUG))
 				report_xi2_event(event, "Press");
 			if (xinput_pressed.size()) {
 				if (!current_dev || current_dev->dev != event->deviceid)
 					break;
 			} else {
 				current_app_window.set(get_app_window(event->child));
-				if (verbosity >= 3)
-					printf("Active window 0x%lx -> 0x%lx\n", event->child, current_app_window.get());
+				g_debug("Active window 0x%lx -> 0x%lx\n", event->child, current_app_window.get());
 			}
 			current_dev = grabber->get_xi_dev(event->deviceid);
 			if (!current_dev) {
-				printf("Warning: Spurious device event\n");
+				g_warning("Warning: Spurious device event\n");
 				break;
 			}
 			if (current_dev->master)
@@ -275,7 +273,7 @@ void XState::handle_xi2_event(XIDeviceEvent *event) {
 			H->press(event->detail, create_triple(event->root_x, event->root_y, event->time));
 			break;
 		case XI_ButtonRelease:
-			if (verbosity >= 3)
+			if (log_utils::isEnabled(G_LOG_LEVEL_DEBUG))
 				report_xi2_event(event, "Release");
 			if (!current_dev || current_dev->dev != event->deviceid)
 				break;
@@ -284,7 +282,7 @@ void XState::handle_xi2_event(XIDeviceEvent *event) {
 			H->release(event->detail, create_triple(event->root_x, event->root_y, event->time));
 			break;
 		case XI_Motion:
-			if (verbosity >= 5)
+			if (log_utils::isEnabled(G_LOG_LEVEL_DEBUG))
 				report_xi2_event(event, "Motion");
 			if (!current_dev || current_dev->dev != event->deviceid)
 				break;
@@ -318,10 +316,10 @@ void XState::handle_raw_motion(XIRawEvent *event) {
 	else
 		abs_y = false;
 
-	if (verbosity >= 5) {
-		printf("Raw motion (XI2): (");
+	if (log_utils::isEnabled(G_LOG_LEVEL_DEBUG)) {
+		g_debug("Raw motion (XI2): (");
 		print_coordinates(&event->valuators, event->raw_values);
-		printf(") at t = %ld\n", event->time);
+		g_debug(") at t = %ld\n", event->time);
 	}
 
 	H->raw_motion(create_triple(x * current_dev->scale_x, y * current_dev->scale_y, event->time), abs_x, abs_y);
@@ -337,8 +335,7 @@ bool XState::handle(Glib::IOCondition) {
 			if (!grabber->handle(ev))
 				handle_event(ev);
 		} catch (GrabFailedException &e) {
-			printf(_("Error: %s\n"), e.what());
-			bail_out();
+		    g_error("%s", e.what());
 		}
 	}
 	return true;
@@ -372,12 +369,13 @@ void Handler::replace_child(Handler *c) {
 	child = c;
 	if (child)
 		child->parent = this;
-	if (verbosity >= 2) {
+
+	if (log_utils::isEnabled(G_LOG_LEVEL_DEBUG)) {
 		std::string stack;
 		for (Handler *h = child ? child : this; h; h=h->parent) {
 			stack = h->name() + " " + stack;
 		}
-		printf("New event handling stack: %s\n", stack.c_str());
+		g_debug("New event handling stack: %s\n", stack.c_str());
 	}
 	Handler *new_handler = child ? child : this;
 	grabber->grab(new_handler->grab_mode());
@@ -469,7 +467,7 @@ void XState::bail_out() {
 int XState::xErrorHandler(Display *dpy2, XErrorEvent *e) {
 	if (dpy != dpy2)
 		return xstate->oldHandler(dpy2, e);
-	if (verbosity == 0 && e->error_code == BadWindow) {
+	if (e->error_code == BadWindow) {
 		switch (e->request_code) {
 			case X_ChangeWindowAttributes:
 			case X_GetProperty:
@@ -477,6 +475,7 @@ int XState::xErrorHandler(Display *dpy2, XErrorEvent *e) {
 				return 0;
 		}
 	}
+
 	char text[64];
 	XGetErrorText(dpy, e->error_code, text, sizeof text);
 	char msg[16];
@@ -488,7 +487,7 @@ int XState::xErrorHandler(Display *dpy2, XErrorEvent *e) {
 		snprintf(def, sizeof def, "extension=%s, request_code=%d", xstate->opcodes[e->request_code].c_str(), e->minor_code);
 	char dbtext[128];
 	XGetErrorDatabaseText(dpy, "XRequest", msg, def, dbtext, sizeof dbtext);
-	printf("XError: %s: %s\n", text, dbtext);
+	g_warning("XError: %s: %s\n", text, dbtext);
 
 	return 0;
 }
@@ -496,7 +495,7 @@ int XState::xErrorHandler(Display *dpy2, XErrorEvent *e) {
 int XState::xIOErrorHandler(Display *dpy2) {
 	if (dpy != dpy2)
 		return xstate->oldIOHandler(dpy2);
-	printf("Fatal Error: Connection to X server lost\n");
+    g_error("Connection to X server lost");
 	quit();
 	return 0;
 }
@@ -525,7 +524,7 @@ class WaitForPongHandler : public Handler, protected Timeout {
 public:
 	WaitForPongHandler() { set_timeout(100); }
 	virtual void timeout() {
-		printf("Warning: %s timed out\n", "WaitForPongHandler");
+		g_warning("%s timed out\n", "WaitForPongHandler");
 		xstate->bail_out();
 	}
 	virtual void pong() { parent->replace_child(nullptr); }
@@ -892,8 +891,7 @@ class StrokeHandler : public Handler, public sigc::trackable {
 	}
 
 	bool timeout() {
-		if (verbosity >= 2)
-			printf("Aborting stroke...\n");
+        g_debug("Aborting stroke...");
 		trace->end();
 		RPreStroke c = cur;
 		if (!is_gesture)

@@ -37,8 +37,7 @@ Stats::Stats() {
 
 	ranking_view->set_model(Gtk::ListStore::create(cols));
 	ranking_view->append_column(_("Stroke"), cols.stroke);
-	if (verbosity >= 4)
-		ranking_view->append_column("Debug", cols.debug);
+	ranking_view->append_column("Debug", cols.debug);
 	ranking_view->append_column(_("Name"), cols.name);
 	ranking_view->append_column(_("Score"), cols.score);
 }
@@ -223,8 +222,7 @@ bool Stats::on_stroke(RRanking r) {
 	for (std::multimap<double, std::pair<std::string, RStroke> >::iterator i = r->r.begin(); i != r->r.end(); i++) {
 		Gtk::TreeModel::Row row2 = *(ranking_store->prepend());
 		row2[cols.stroke] = i->second.second->draw(STROKE_SIZE);
-		if (verbosity >= 4)
-			row2[cols.debug] = Stroke::drawDebug(r->stroke, i->second.second, STROKE_SIZE);
+		row2[cols.debug] = Stroke::drawDebug(r->stroke, i->second.second, STROKE_SIZE);
 		row2[cols.name] = i->second.first;
 		row2[cols.score] = format_float(i->first * 100) + "%";
 	}
@@ -233,8 +231,7 @@ bool Stats::on_stroke(RRanking r) {
 
 void Stats::on_pdf() {
 	struct timeval tv1, tv2;
-	if (verbosity >= 1)
-		gettimeofday(&tv1, 0);
+	gettimeofday(&tv1, 0);
 	const int S = 32;
 	const int B = 1;
 	std::list<RStroke> strokes;
@@ -275,10 +272,9 @@ void Stats::on_pdf() {
 			ctx->show_text(str);
 		}
 	}
-	if (verbosity >= 1) {
-		gettimeofday(&tv2, 0);
-		printf("creating table took %ld us\n", (tv2.tv_sec - tv1.tv_sec)*1000000 + tv2.tv_usec - tv1.tv_usec);
-	}
+	gettimeofday(&tv2, 0);
+	g_debug("creating table took %ld us\n", (tv2.tv_sec - tv1.tv_sec)*1000000 + tv2.tv_usec - tv1.tv_usec);
+
 	if (!fork()) {
 		execlp("xdg-open", "xdg-open", "/tmp/strokes.pdf", nullptr);
 		exit(EXIT_FAILURE);

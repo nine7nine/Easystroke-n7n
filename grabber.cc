@@ -250,7 +250,7 @@ bool Grabber::init_xi() {
 	if (!XQueryExtension(dpy, "XInputExtension", &opcode, &event, &error) ||
 			XIQueryVersion(dpy, &major, &minor) == BadRequest ||
 			major < 2) {
-		printf("Error: This version of easystroke needs an XInput 2.0-aware X server.\n"
+		g_error("This version of easystroke needs an XInput 2.0-aware X server.\n"
 				"Please downgrade to easystroke 0.4.x or upgrade your X server to 1.7.\n");
 		exit(EXIT_FAILURE);
 	}
@@ -258,7 +258,7 @@ bool Grabber::init_xi() {
 	int n;
 	XIDeviceInfo *info = XIQueryDevice(dpy, XIAllDevices, &n);
 	if (!info) {
-		printf("Warning: No XInput devices available\n");
+		g_warning("Warning: No XInput devices available\n");
 		return false;
 	}
 
@@ -271,7 +271,7 @@ bool Grabber::init_xi() {
 	set();
 
 	if (!xi_devs.size()) {
-		printf("Error: No suitable XInput devices found\n");
+		g_error("Error: No suitable XInput devices found\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -317,8 +317,7 @@ bool Grabber::hierarchy_changed(XIHierarchyEvent *event) {
 			update_excluded();
 			changed = true;
 		} else if (info->flags & XISlaveRemoved) {
-			if (verbosity >= 1)
-				printf("Device %d removed.\n", info->deviceid);
+            g_message("Device %d removed.\n", info->deviceid);
 			xstate->remove_device(info->deviceid);
 			xi_devs.erase(info->deviceid);
 			changed = true;
@@ -392,8 +391,7 @@ Grabber::XiDevice::XiDevice(Grabber *parent, XIDeviceInfo *info) : absolute(fals
 		}
 	}
 
-	if (verbosity >= 1)
-		printf("Opened Device %d ('%s'%s).\n", dev, info->name, absolute ? ": absolute" : "");
+    g_message("Opened Device %d ('%s'%s).\n", dev, info->name, absolute ? ": absolute" : "");
 }
 
 Grabber::XiDevice *Grabber::get_xi_dev(int id) {
@@ -463,8 +461,7 @@ void Grabber::set() {
 	grabbed = act ? current : NONE;
 	if (old == grabbed)
 		return;
-	if (verbosity >= 2)
-		printf("grabbing: %s\n", state_name[grabbed]);
+	g_debug("grabbing: %s\n", state_name[grabbed]);
 
 	if (old == SELECT)
 		XUngrabPointer(dpy, CurrentTime);
@@ -608,7 +605,6 @@ Window get_app_window(Window w) {
 		}
 		return w2;
 	}
-	if (verbosity >= 1)
-		printf("Window 0x%lx does not have an associated top-level window\n", w);
+    g_message("Window 0x%lx does not have an associated top-level window\n", w);
 	return w;
 }

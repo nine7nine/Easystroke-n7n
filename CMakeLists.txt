@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 project(easystroke LANGUAGES C CXX)
 
 file(GLOB SOURCES
-    *.c *.cc
+    *.c *.cc *.h *.cpp
 )
 
 find_package(PkgConfig REQUIRED)

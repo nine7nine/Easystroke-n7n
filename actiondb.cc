@@ -209,11 +209,10 @@ void ActionDBWatcher::init() {
 						boost::archive::text_iarchive ia(ifs);
 						ia >> boost::serialization::make_nvp("actions", actions);
 					}
-					if (verbosity >= 2)
-						printf("Loaded actions.\n");
+					g_warning("Loaded actions.\n");
 				}
 			} catch (exception &e) {
-				printf(_("Error: Couldn't read action database: %s.\n"), e.what());
+				g_warning(_("Couldn't read action database: %s.\n"), e.what());
 			}
 			break;
 		}
@@ -232,10 +231,9 @@ void ActionDBWatcher::timeout() {
 		ofs.close();
 		if (rename(tmp.c_str(), filename.c_str()))
 			throw std::runtime_error(_("rename() failed"));
-		if (verbosity >= 2)
-			printf("Saved actions.\n");
+		g_warning("Saved actions.\n");
 	} catch (exception &e) {
-		printf(_("Error: Couldn't save action database: %s.\n"), e.what());
+		g_warning(_("Error: Couldn't save action database: %s.\n"), e.what());
 		if (!good_state)
 			return;
 		good_state = false;
@@ -342,11 +340,9 @@ RAction ActionListDiff::handle(RStroke s, RRanking &r) const {
 	if (!r->action && s->trivial())
 		return RAction(new Click);
 	if (r->action) {
-		if (verbosity >= 1)
-			printf("Executing Action %s\n", r->name.c_str());
+        g_message("Executing Action %s\n", r->name.c_str());
 	} else {
-		if (verbosity >= 1)
-			printf("Couldn't find matching stroke.\n");
+        g_message("Couldn't find matching stroke.\n");
 	}
 	return r->action;
 }
