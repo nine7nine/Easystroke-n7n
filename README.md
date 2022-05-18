@@ -6,12 +6,14 @@ The purpose of my fork is a continued effort to integrate useful changes && bugf
 the original look, feel and spirit of the original Easystroke software. The other motivation is that the Archlinux AUR packages
 are poorly maintained and are currently broken (so I might as well just maintain my own packages).
 
-The original repo/project can be found here: https://github.com/thjaeger/easystroke
-Akozlins Fork: https://github.com/akozlins/easystroke
+ - The original repo/project can be found here: https://github.com/thjaeger/easystroke
+ - Akozlins Fork: https://github.com/akozlins/easystroke
 
 I'm also pulling and adapting changes from the Easy-Gesture Fork(s) found here;
 
  - https://github.com/berkeleybross/easy-gesture
  - https://github.com/wenwu-glagle/easy-gesture
 
-my Archlinux package; https://github.com/nine7nine/pkgbuild-easystroke
+My Archlinux pkgbuild can be found here; 
+
+ - https://github.com/nine7nine/pkgbuild-easystroke
