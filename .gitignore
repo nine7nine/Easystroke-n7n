@@ -8,6 +8,7 @@ easystroke
 easystroke.1
 gui.c
 desktop.c
+*.patch
 *.orig
 *.rej
 *.swp
