@@ -8,6 +8,8 @@ easystroke
 easystroke.1
 gui.c
 desktop.c
+*.orig
+*.rej
 *.swp
 debug.mk
 po/??
