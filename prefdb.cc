@@ -36,7 +36,6 @@ PrefDB::PrefDB() :
 	TimeoutWatcher(5000),
 	good_state(true),
 	button(default_button),
-	trace(TraceDefault),
 	advanced_ignore(false),
 	proximity(false),
 	feedback(true),
