@@ -18,4 +18,4 @@ I'm also pulling and adapting changes from the Easy-Gesture Fork(s) found here;
 
 My Archlinux pkgbuild can be found here; 
 
- - https://github.com/nine7nine/pkgbuild-easystroke
+ - https://github.com/nine7nine/Easystoke-n7n-pkgbuild
