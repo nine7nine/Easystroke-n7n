@@ -1,5 +1,7 @@
 # Easystroke Gesture Recognition Software for X11
 
+![My Image](/images/easystroke.png)
+
 This is a fork of `https://github.com/akozlins/easystroke`. The original Easystroke Project that is completely unmaintained, at this point... Akozlins' fork adds cmake build system, some vala changes + a couple of fixes... 
 
 The purpose of my fork is a continued effort to integrate useful changes && bugfixes found in other forks, while retaining
