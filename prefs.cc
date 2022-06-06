@@ -152,6 +152,14 @@ public:
 };
 
 static bool is_custom(TimeoutType profile) { return profile == TimeoutCustom; }
+static bool draw_trace(TraceType t) { return t == TraceDefault || t == TraceShape; }
+
+const Combo<TraceType>::Info trace_info[] = {
+	{ TraceNone, N_("None") },
+	{ TraceDefault, N_("Default") },
+	{ TraceShape, N_("XShape") },
+	{ TraceDefault, 0 }
+};
 
 const Combo<TimeoutType>::Info timeout_info[] = {
 	{ TimeoutOff, N_("Timeout Off") },
@@ -204,6 +212,7 @@ Prefs::Prefs() {
 	new Adjustment<int>(prefs.init_timeout, "adjustment_init_timeout");
 	new Adjustment<int>(prefs.final_timeout, "adjustment_final_timeout");
 
+	new Combo<TraceType>(prefs.trace, "box_trace", trace_info);
 	new Color(prefs.color, "button_color");
 	new Adjustment<int>(prefs.trace_width, "adjustment_trace_width");
 	new Combo<TimeoutType>(prefs.timeout_profile, "box_timeout", experimental ? timeout_info_exp : timeout_info);
@@ -232,6 +241,8 @@ Prefs::Prefs() {
 	widgets->get_widget("frame_tablet", frame_tablet);
 
 	new Sensitive(*fun(&is_custom, prefs.timeout_profile), "hbox_timeout");
+	new Sensitive(*fun(&draw_trace, prefs.trace), "button_color");
+	new Sensitive(*fun(&draw_trace, prefs.trace), "spin_trace_width");
 
 	tm = Gtk::ListStore::create(cols);
 	tv->set_model(tm);

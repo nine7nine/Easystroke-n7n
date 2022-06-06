@@ -15,6 +15,7 @@
  */
 #include "win.h"
 #include "main.h"
+#include "shape.h"
 #include "prefs.h"
 #include "actiondb.h"
 #include "prefdb.h"
@@ -52,8 +53,27 @@ boost::shared_ptr<Trace> trace;
 
 static ActionDBWatcher *action_watcher = 0;
 
+static Trace *trace_composite() {
+	try {
+		return new Composite();
+	} catch (std::exception &e) {
+		g_message("Falling back to Shape method: %s\n", e.what());
+		return new Shape();
+	}
+}
+
 static Trace *init_trace() {
-    return new Composite();
+	try {
+		switch(prefs.trace.get()) {
+			case TraceShape:
+				return new Shape();
+			default:
+				return trace_composite();
+		}
+	} catch (DBusException &e) {
+		printf(_("Error: %s\n"), e.what());
+		return trace_composite();
+	}
 }
 
 class OSD : public Gtk::Window {
@@ -293,6 +313,7 @@ void App::on_activate() {
 	g_signal_connect(screen->gobj(), "composited-changed", &schedule_reload_trace, nullptr);
 	screen->signal_size_changed().connect(sigc::ptr_fun(&schedule_reload_trace));
 	Notifier *trace_notify = new Notifier(sigc::ptr_fun(&schedule_reload_trace));
+	prefs.trace.connect(trace_notify);
 	prefs.color.connect(trace_notify);
 
 	XTestGrabControl(dpy, True);

@@ -13,40 +13,23 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifndef __TRACE_H__
-#define __TRACE_H__
+#ifndef __SHAPE_H__
+#define __SHAPE_H__
+#include "util.h"
+#include "trace.h"
+#include "main.h"
 
-#include <exception>
-#include <glibmm/i18n.h>
-
-struct DBusException: public std::exception {
-	virtual const char* what() const throw() { return _("Connection to DBus failed"); }
-};
-
-class Trace {
-public:
-	struct Point { float x; float y; };
+class Shape : public Trace, protected Timeout {
+	Window win;
 private:
-	Point last;
-	bool active;
-protected:
-	virtual void draw(Point p, Point q) = 0;
-	virtual void start_() = 0;
-	virtual void end_() = 0;
+	virtual void draw(Point p, Point q);
+	virtual void start_();
+	virtual void end_();
+	void clear();
 public:
-	Trace() : active(false) {}
-	void draw(Point p) { draw(last, p); last = p; }
-	void start(Point p);
-	void end();
-	virtual void timeout() {}
-	virtual ~Trace() {}
-};
-
-class Trivial : public Trace {
-	virtual void draw(Point p, Point q) {}
-	virtual void start_() {}
-	virtual void end_() {}
-public:
+	Shape();
+	virtual void timeout();
+	virtual ~Shape();
 };
 
 #endif
