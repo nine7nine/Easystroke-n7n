@@ -21,10 +21,8 @@
 #include <X11/extensions/shape.h>
 
 Shape::Shape() {
-	GdkRectangle workarea = {0};
-	gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &workarea);
-	int w = workarea.width;
-	int h = workarea.height;
+	int w = gdk_screen_width();
+	int h = gdk_screen_height();
 	Gdk::Color col = prefs.color.get().color;
 	unsigned long bg = ((col.get_red()/257)<<16) + ((col.get_green()/257)<<8) + col.get_blue()/257;
 	win = XCreateSimpleWindow(dpy, ROOT, 0, 0, w, h, 0, CopyFromParent, bg);

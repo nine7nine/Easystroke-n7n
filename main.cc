@@ -98,9 +98,7 @@ public:
 		get_window()->input_shape_combine_region(Cairo::Region::create(), 0, 0);
 	}
 	static void do_move() {
-		GdkRectangle workarea = {0};
-		gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &workarea);
-		int left = workarea.width - 10;	
+		int left = gdk_screen_width() - 10;
 		for (std::list<OSD *>::iterator i = osd_stack.begin(); i != osd_stack.end(); i++) {
 			left -= (*i)->w + 30;
 			(*i)->move(left, 40);
