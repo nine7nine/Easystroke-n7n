@@ -115,6 +115,7 @@ std::list<OSD *> OSD::osd_stack;
 void Trace::start(Trace::Point p) {
 	last = p;
 	active = true;
+	XFixesHideCursor(dpy, ROOT);
 	start_();
 }
 
@@ -122,6 +123,7 @@ void Trace::end() {
 	if (!active)
 		return;
 	active = false;
+	XFixesShowCursor(dpy, ROOT);
 	end_();
 }
 
