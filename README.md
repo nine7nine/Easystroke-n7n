@@ -1,3 +1,7 @@
+NOTE: this project is basically x11-only and DEAD. If you are seeking a Wayland replacement, see:
+
+https://github.com/nine7nine/WeazyStroke
+
 # Easystroke Gesture Recognition Software for X11
 
 ![My Image](/images/easystroke.png)
